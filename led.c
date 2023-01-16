@@ -2,6 +2,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 // TODO: Will have to move this or change overall division of files.
 #define ERR_OPEN 1
@@ -30,15 +31,14 @@ int writeToFile(char* fileName, char* data)
 void Led_writeToFile(LedId led, LedFileType fileType, char* data)
 {
     // Prepare the file name.
-    //  int snprintf(char *str, size_t size, const char *format, ...);
     char fileName[1024];
-    char* postfix = "";
+    char postfix[512];
     switch (fileType) {
-        case TRIGGER:
+        case LED_TRIGGER_FILE:
             // char *strncpy(char *dest, const char *src, size_t n);
             strncpy(postfix, LED_TRIGGER_FILE_PATH_POSTFIX, 512);
             break;
-        case BRIGHTNESS:
+        case LED_BRIGHTNESS_FILE:
             strncpy(postfix, LED_BRIGHTNESS_FILE_PATH_POSTFIX, 512);
             break;
         default:
@@ -46,7 +46,16 @@ void Led_writeToFile(LedId led, LedFileType fileType, char* data)
             assert(true);
             break;
     }
+    //  int snprintf(char *str, size_t size, const char *format, ...);
     snprintf(fileName, 1024, "%s%d%s", LED_FOLDER_PATH_PREFIX, led, postfix);
 
     writeToFile(fileName, data);
+}
+
+void Led_init(void)
+{
+    Led_writeToFile(LED_TOP, LED_TRIGGER_FILE, "none");
+    Led_writeToFile(LED_UPPER_MID, LED_TRIGGER_FILE, "none");
+    Led_writeToFile(LED_LOWER_MID, LED_TRIGGER_FILE, "none");
+    Led_writeToFile(LED_BOTTOM, LED_TRIGGER_FILE, "none");
 }

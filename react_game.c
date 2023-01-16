@@ -24,14 +24,15 @@ int main(int argc, char* args[])
 
     // TODO: Set up / initialize LEDs and joystick.
     // Set each LEDs' trigger to none.
+    Led_init();
 
     printf("When the LEDs light up, press the joystick in that direction!\n");
     printf("(Press left or right to exit.)\n");
 
     // The game loop.
-    bool keepRunning = true;
-    while (keepRunning) {
-        printf("Get ready...\n");
+    // bool keepRunning = true;
+    // while (keepRunning) {
+    //     printf("Get ready...\n");
 
         // TODO: Wait random time between 0.5s and 3s.
 
@@ -58,7 +59,7 @@ int main(int argc, char* args[])
         //          at 10 Hz for 1 second.
         //      c) If the user pressed left or right, print a message and quit.
 
-    }
+    // }
 
     return 0;
 }

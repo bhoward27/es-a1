@@ -9,17 +9,18 @@
 #define LED_BRIGHTNESS_FILE_PATH_POSTFIX "/brightness"
 
 typedef enum {
-    TOP = 0,
-    UPPER_MID,
-    LOWER_MID,
-    BOTTOM
+    LED_TOP = 0,
+    LED_UPPER_MID,
+    LED_LOWER_MID,
+    LED_BOTTOM
 } LedId;
 
 typedef enum {
-    TRIGGER,
-    BRIGHTNESS
+    LED_TRIGGER_FILE,
+    LED_BRIGHTNESS_FILE
 } LedFileType;
 
 void Led_writeToFile(LedId led, LedFileType fileType, char* data);
+void Led_init(void);
 
 #endif
