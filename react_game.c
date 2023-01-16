@@ -4,24 +4,26 @@
 #include <sys/wait.h>
 
 #include "int_typedefs.h"
+#include "led.h"
 
-enum JoystickDirection {
+typedef enum {
     NONE,
     UP,
     DOWN,
     LEFT,
     RIGHT
-};
+} JoystickDirection;
 
 void runCommand(char* command);
-long long getTimeInMs(void);
-void sleepForMs(long long delayInMs);
+int64 getTimeInMs(void);
+void sleepForMs(int64 delayInMs);
 
 int main(int argc, char* args[])
 {
     printf("Hello embedded world, from Ben!\n");
 
-    // TODO: Set each LEDs' trigger to none.
+    // TODO: Set up / initialize LEDs and joystick.
+    // Set each LEDs' trigger to none.
 
     printf("When the LEDs light up, press the joystick in that direction!\n");
     printf("(Press left or right to exit.)\n");
@@ -84,23 +86,23 @@ void runCommand(char* command)
 }
 
 // Citation: Function copied from Dr. Fraser's CMPT 433 documents.
-long long getTimeInMs(void)
+int64 getTimeInMs(void)
 {
     struct timespec spec;
     clock_gettime(CLOCK_REALTIME, &spec);
-    long long seconds = spec.tv_sec;
-    long long nanoSeconds = spec.tv_nsec;
-    long long milliSeconds = seconds * 1000
+    int64 seconds = spec.tv_sec;
+    int64 nanoSeconds = spec.tv_nsec;
+    int64 milliSeconds = seconds * 1000
                  + nanoSeconds / 1000000;
     return milliSeconds;
 }
 
 // Citation: Function copied from Dr. Fraser's CMPT 433 documents.
-void sleepForMs(long long delayInMs)
+void sleepForMs(int64 delayInMs)
 {
-    const long long NS_PER_MS = 1000 * 1000;
-    const long long NS_PER_SECOND = 1000000000;
-    long long delayNs = delayInMs * NS_PER_MS;
+    const int64 NS_PER_MS = 1000 * 1000;
+    const int64 NS_PER_SECOND = 1000000000;
+    int64 delayNs = delayInMs * NS_PER_MS;
     int seconds = delayNs / NS_PER_SECOND;
     int nanoseconds = delayNs % NS_PER_SECOND;
     struct timespec reqDelay = {seconds, nanoseconds};
