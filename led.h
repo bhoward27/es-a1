@@ -1,12 +1,12 @@
-#ifndef LED_H
-#define LED_H
+#ifndef LED_H_
+#define LED_H_
 
 #include "int_typedefs.h"
 #include <stdbool.h>
 
 #define LED_FOLDER_PATH_PREFIX "/sys/class/leds/beaglebone:green:usr"
-#define LED_TRIGGER_FILE_PATH_POSTFIX "/trigger"
-#define LED_BRIGHTNESS_FILE_PATH_POSTFIX "/brightness"
+#define LED_TRIGGER_PATH_POSTFIX "/trigger"
+#define LED_BRIGHTNESS_PATH_POSTFIX "/brightness"
 
 typedef enum {
     LED_TOP = 0,
