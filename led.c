@@ -9,7 +9,7 @@
 void Led_writeToFile(LedId led, LedFileType fileType, char* data)
 {
     // Prepare the file name.
-    char fileName[1024];
+    char fileName[DEFAULT_STRING_LEN];
     char postfix[512];
     switch (fileType) {
         case LED_TRIGGER_FILE:
@@ -25,7 +25,7 @@ void Led_writeToFile(LedId led, LedFileType fileType, char* data)
             break;
     }
     //  int snprintf(char *str, size_t size, const char *format, ...);
-    snprintf(fileName, 1024, "%s%d%s", LED_FOLDER_PATH_PREFIX, led, postfix);
+    snprintf(fileName, DEFAULT_STRING_LEN, "%s%d%s", LED_FOLDER_PATH_PREFIX, led, postfix);
 
     writeToFile(fileName, data, true);
 }

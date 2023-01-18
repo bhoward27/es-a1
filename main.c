@@ -1,27 +1,46 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <time.h>
 
 #include "int_typedefs.h"
 #include "led.h"
 #include "joystick.h"
+#include "utils.h"
+
+#define URANDOM_PATH "/dev/urandom"
+// #define URANDOM_PATH "/dev/purple_unicorn"
 
 int main(int argc, char* args[])
 {
-    printf("Hello embedded world, from Ben!\n");
-
-    // TODO: Set up / initialize LEDs and joystick.
-    // Set each LEDs' trigger to none.
+    printf("Hello embedded world, from Ben!\n\n");
+    initLogLevel();
     Led_init();
+    Joystick_init();
 
+    printf("\n");
     printf("When the LEDs light up, press the joystick in that direction!\n");
     printf("(Press left or right to exit.)\n");
 
     // The game loop.
-    // bool keepRunning = true;
+    // srandom(time(NULL));
+    int64 minMs = 500;
+    int64 maxMs = 3000;
+    bool keepRunning = true;
     // while (keepRunning) {
-    //     printf("Get ready...\n");
+        printf("Get ready...\n");
 
-        // TODO: Wait random time between 0.5s and 3s.
+        // Wait random time between 0.5 s (500 ms) and 3 s (3000 ms).
+
+        FILE* pFile = fopen(URANDOM_PATH, "r");
+        if (pFile == NULL) {
+            FILE_OPEN_ERR(URANDOM_PATH, true);
+        }
+        // size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
+        // fread(
+
+        //int64 randWaitMs = random() % (maxMs - minMs) + minMs;
+        // sleepForMs(randWaitMs);
+        // printf("Waited %lld ms.", randWaitMs);
 
         // TODO: If user is already pressing up or down, print "Too soon!" and continue / go to top of loop.
 
