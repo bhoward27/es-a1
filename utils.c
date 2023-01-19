@@ -9,46 +9,54 @@ static uint8 gLogLevel = LOG_LEVEL_ERROR;
 
 static bool isValidLogLevel(uint8 logLevel);
 
-int writeToFile(char* fileName, char* data, bool exitOnFailure)
+int overwriteFile(char* filePath, char* string, bool exitOnFailure)
 {
-    assert(fileName != NULL);
-    assert(data != NULL);
+    assert(filePath != NULL);
+    assert(string != NULL);
 
-    FILE* pFile = fopen(fileName, "w");
+    FILE* pFile = fopen(filePath, "w");
     if (pFile == NULL) {
-        if (exitOnFailure) {
-            FILE_OPEN_ERR(fileName, true);
-        }
-        FILE_OPEN_ERR(fileName, false);
+        FILE_OPEN_ERR(filePath, exitOnFailure);
         return ERR_OPEN;
     }
-    int res = fprintf(pFile, data);
+    int res = fprintf(pFile, string);
     if (res <= 0) {
-        if (exitOnFailure) {
-            // char errMsg[1024];
-            // snprintf(errMsg, 1024, "Failed to write to file '%s' in writeToFile().\n", fileName);
-            // // sysDie("writeToFile()", errMsg);
-            // perror(__func__);
-            // LOG(errMsg);
-            // exit(EXIT_FAILURE);
-            FILE_WRITE_ERR(fileName, true);
-        }
-        FILE_WRITE_ERR(fileName, false);
+        FILE_WRITE_ERR(filePath, exitOnFailure);
         return ERR_WRITE;
     }
 
     if (fclose(pFile)) {
-        if (exitOnFailure) {
-            FILE_CLOSE_ERR(fileName, true);
-        }
-        FILE_CLOSE_ERR(fileName, false);
+        FILE_CLOSE_ERR(filePath, exitOnFailure);
         return ERR_CLOSE;
     }
 
     return OK;
 }
 
-void runCommand(char* command)
+int readFile(char* filePath, void* outData, size_t numBytesPerItem, size_t numItems, bool exitOnFailure)
+{
+    FILE* pFile = fopen(filePath, "r");
+    if (pFile == NULL) {
+        if (exitOnFailure)
+        FILE_OPEN_ERR(filePath, exitOnFailure);
+        return ERR_OPEN;
+    }
+
+    size_t res = fread(outData, numBytesPerItem, numItems, pFile);
+    if (res < numItems) {
+        FILE_READ_ERR(filePath, exitOnFailure);
+        return ERR_READ;
+    }
+
+    if (fclose(pFile)) {
+        FILE_CLOSE_ERR(filePath, exitOnFailure);
+        return ERR_CLOSE;
+    }
+
+    return OK;
+}
+
+int runCommand(char* command)
 {
     // Execute the shell command (output into pipe)
     FILE *pipe = popen(command, "r");
@@ -66,7 +74,9 @@ void runCommand(char* command)
         perror("Unable to execute command:");
         printf("  command:   %s\n", command);
         printf("  exit code: %d\n", exitCode);
+        return 1;
     }
+    return OK;
 }
 
 int64 getTimeInMs(void)
@@ -91,40 +101,80 @@ void sleepForMs(int64 delayInMs)
     nanosleep(&reqDelay, (struct timespec *) NULL);
 }
 
-void Gpio_exportPin(GpioNum pin, char* header)
+void Gpio_exportPin(GpioNum pin, char* header, GpioNum linuxPin)
 {
     // Set pin to GPIO mode.
     char pinString[4];
     snprintf(pinString, 4, "%u", pin);
     char command[DEFAULT_STRING_LEN];
     snprintf(command, DEFAULT_STRING_LEN, "%s %s.%s gpio", GPIO_CONFIG_PIN_PATH, header, pinString);
-    runCommand(command);
+    int64 sleepMs = 35;
+    int maxTries = 3;
+    int ret = !OK;
+    for (int i = 0; i < maxTries && ((ret = runCommand(command)) == !OK); i++) {
+        LOG(LOG_LEVEL_DEBUG, "Trying again in %lld ms...\n", sleepMs);
+        sleepForMs(sleepMs);
+    }
 
     // Export the pin.
-    writeToFile(GPIO_EXPORT_PATH, pinString, false);
+    char linuxPinString[4];
+    snprintf(linuxPinString, 4, "%u", linuxPin);
+    for (int i = 0; i < maxTries && ((ret = overwriteFile(GPIO_EXPORT_PATH, linuxPinString, false)) != OK); i++) {
+        LOG(LOG_LEVEL_DEBUG, "Trying again in %lld ms...\n", sleepMs);
+        sleepForMs(sleepMs);
+    }
+
+    if (ret == OK) {
+        LOG(LOG_LEVEL_DEBUG, "%s(%u, %s, %u) SUCCEEDED.\n\n", __func__, pin, header, linuxPin);
+    }
+    else {
+        LOG(LOG_LEVEL_DEBUG, "%s(%u, %s, %u) FAILED.\n\n", __func__, pin, header, linuxPin);
+    }
 }
 
-// void die(char* errorMessage)
-// {
-//     assert(errorMessage != NULL);
-//     printf(errorMessage);
-//     exit(EXIT_FAILURE);
-// }
+void Gpio_configIo(GpioNum linuxPin, bool isInput)
+{
+    char filePath[DEFAULT_STRING_LEN];
+    snprintf(filePath, DEFAULT_STRING_LEN, "%s%u/direction", GPIO_PIN_PATH_PREFIX, linuxPin);
+    int64 sleepMs = 35;
+    int maxTries = 10;
+    int ret = !OK;
+    for (int i = 0; i < maxTries && ((ret = overwriteFile(filePath, ((isInput) ? "in" : "out"), false)) != OK); i++) {
+        LOG(LOG_LEVEL_DEBUG, "Trying again in %lld ms...\n", sleepMs);
+        sleepForMs(sleepMs);
+    }
+    if (ret == OK) {
+        LOG(LOG_LEVEL_DEBUG, "%s(%u, %u) SUCCEEDED.\n\n", __func__, linuxPin, isInput);
+    }
+    else {
+        LOG(LOG_LEVEL_DEBUG, "%s(%u, %u) FAILED.\n\n", __func__, linuxPin, isInput);
+    }
 
-// // Only use if a system or standard library call failed. Otherwise, use die().
-// void sysDie(char* functionName, char* errorMessage)
-// {
-//     assert(functionName != NULL);
-//     perror(functionName);
-//     die(errorMessage);
-// }
+}
 
-// void fileOpenDie(char* functionName, char* fileName)
-// {
-//     char errMsg[1024];
-//     snprintf(errMsg, 1024, "Failed to open file '%s' %s.\n", functionName, fileName);
-//     sysDie(functionName, errMsg);
-// }
+void Gpio_initPin(GpioNum pin, char* header, GpioNum linuxPin, bool isInput)
+{
+    Gpio_exportPin(pin, header, linuxPin);
+
+    LOG(LOG_LEVEL_DEBUG, "Calling Gpio_configIo()...\n");
+    Gpio_configIo(linuxPin, isInput);
+}
+
+int Gpio_readInput(GpioNum linuxPin)
+{
+    char filePath[DEFAULT_STRING_LEN];
+    snprintf(filePath, DEFAULT_STRING_LEN, "%s%u/value", GPIO_PIN_PATH_PREFIX, linuxPin);
+
+    char valueString[2];
+    int res = readFile(filePath, (void*) valueString, sizeof(char), 1, false);
+    if (res == OK) {
+        // TODO: atoi also returns zero if the conversion failed! In this case, ideally would use a different method.
+        return atoi(valueString);
+    }
+    else {
+        return GPIO_READ_ERR;
+    }
+}
 
 // You probably want to call LOG instead of this directly.
 void logMsg(LogLevel logLevel, char* file, int line, const char* function, const char* format, ...)
@@ -182,7 +232,7 @@ int initLogLevel(void)
     // Read a single character from LOG_LEVEL_PATH. This means numbers that take up more than 1 character, so negative
     // numbers or numbers greater than 9, will not be read properly. That's okay since our log levels don't go to that
     // range.
-    size_t res = fread(logLevelString, 1 * sizeof(char), 1, pFile);
+    size_t res = fread(logLevelString, sizeof(char), 1, pFile);
     if (res == 0) {
         FILE_READ_ERR(LOG_LEVEL_PATH, false);
         LOG(LOG_LEVEL_ERROR, defaultMsg);

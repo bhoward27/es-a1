@@ -8,7 +8,6 @@
 #include "utils.h"
 
 #define URANDOM_PATH "/dev/urandom"
-// #define URANDOM_PATH "/dev/purple_unicorn"
 
 int main(int argc, char* args[])
 {
@@ -25,24 +24,47 @@ int main(int argc, char* args[])
     // srandom(time(NULL));
     int64 minMs = 500;
     int64 maxMs = 3000;
+    FILE* pFile = fopen(URANDOM_PATH, "r");
+    if (pFile == NULL) {
+        FILE_OPEN_ERR(URANDOM_PATH, true);
+    }
     bool keepRunning = true;
-    // while (keepRunning) {
+    while (keepRunning) {
         printf("Get ready...\n");
 
         // Wait random time between 0.5 s (500 ms) and 3 s (3000 ms).
 
-        FILE* pFile = fopen(URANDOM_PATH, "r");
-        if (pFile == NULL) {
-            FILE_OPEN_ERR(URANDOM_PATH, true);
-        }
         // size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
-        // fread(
-
+        uint64 randWaitMs;
+        size_t res = fread(&randWaitMs, sizeof(uint64), 1, pFile);
+        if (res == 0) {
+            FILE_READ_ERR(URANDOM_PATH, true);
+        }
+        randWaitMs = randWaitMs % (maxMs - minMs) + minMs;
         //int64 randWaitMs = random() % (maxMs - minMs) + minMs;
-        // sleepForMs(randWaitMs);
-        // printf("Waited %lld ms.", randWaitMs);
+        LOG(LOG_LEVEL_DEBUG, "Sleeping %lld ms...\n", randWaitMs);
+        sleepForMs(randWaitMs);
 
         // TODO: If user is already pressing up or down, print "Too soon!" and continue / go to top of loop.
+        JoystickInput input = Joystick_readInput();
+        switch (input) {
+            case JOYSTICK_INPUT_UP:
+                // Fallthrough
+            case JOYSTICK_INPUT_DOWN:
+                printf("Too soon!\n");
+                continue;
+            case JOYSTICK_INPUT_LEFT:
+                // Fallthrough
+            case JOYSTICK_INPUT_RIGHT:
+                // Fallthrough
+            case JOYSTICK_INPUT_BUTTON:
+                // Fallthrough
+            case JOYSTICK_INPUT_NONE:
+                break;
+            default:
+                assert(false);
+                break;
+        }
 
         // TODO: Pick a random direction (up or down) and print the direction.
 
@@ -65,7 +87,11 @@ int main(int argc, char* args[])
         //          at 10 Hz for 1 second.
         //      c) If the user pressed left or right, print a message and quit.
 
-    // }
+    }
+
+    if (fclose(pFile)) {
+        FILE_CLOSE_ERR(URANDOM_PATH, true);
+    }
 
     return 0;
 }

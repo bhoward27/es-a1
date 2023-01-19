@@ -20,7 +20,7 @@ typedef enum {
     LED_BRIGHTNESS_FILE
 } LedFileType;
 
-void Led_writeToFile(LedId led, LedFileType fileType, char* data);
+void Led_overwriteFile(LedId led, LedFileType fileType, char* data);
 void Led_init(void);
 
 #endif

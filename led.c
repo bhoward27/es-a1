@@ -6,7 +6,7 @@
 
 #include "utils.h"
 
-void Led_writeToFile(LedId led, LedFileType fileType, char* data)
+void Led_overwriteFile(LedId led, LedFileType fileType, char* data)
 {
     // Prepare the file name.
     char fileName[DEFAULT_STRING_LEN];
@@ -27,13 +27,13 @@ void Led_writeToFile(LedId led, LedFileType fileType, char* data)
     //  int snprintf(char *str, size_t size, const char *format, ...);
     snprintf(fileName, DEFAULT_STRING_LEN, "%s%d%s", LED_FOLDER_PATH_PREFIX, led, postfix);
 
-    writeToFile(fileName, data, true);
+    overwriteFile(fileName, data, true);
 }
 
 void Led_init(void)
 {
-    Led_writeToFile(LED_TOP, LED_TRIGGER_FILE, "none");
-    Led_writeToFile(LED_UPPER_MID, LED_TRIGGER_FILE, "none");
-    Led_writeToFile(LED_LOWER_MID, LED_TRIGGER_FILE, "none");
-    Led_writeToFile(LED_BOTTOM, LED_TRIGGER_FILE, "none");
+    Led_overwriteFile(LED_TOP, LED_TRIGGER_FILE, "none");
+    Led_overwriteFile(LED_UPPER_MID, LED_TRIGGER_FILE, "none");
+    Led_overwriteFile(LED_LOWER_MID, LED_TRIGGER_FILE, "none");
+    Led_overwriteFile(LED_BOTTOM, LED_TRIGGER_FILE, "none");
 }
