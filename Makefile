@@ -8,10 +8,10 @@ OFLAGS = $(CFLAGS) -c
 
 OBJS = main.o utils.o led.o joystick.o
 
-all: reactGame
+all: hello
 
-reactGame: $(OBJS)
-	$(CC_C) $(CFLAGS) $(OBJS) -o $(OUT_DIR)/reactGame
+hello: $(OBJS)
+	$(CC_C) $(CFLAGS) $(OBJS) -o $(OUT_DIR)/hello
 
 # Makes new log level file if it doesn't exist.
 	./makeLogLevelFile.sh $(LOG_LEVEL_FILE)
@@ -29,7 +29,7 @@ joystick.o: joystick.c joystick.h
 	$(CC_C) $(OFLAGS) joystick.c
 
 clean:
-	rm -f $(OUT_DIR)/reactGame
+	rm -f $(OUT_DIR)/hello
 	rm -f *.o *.s *.out
 
 clean-log:

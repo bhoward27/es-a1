@@ -35,9 +35,6 @@ typedef enum {
     LOG_LEVEL_DEBUG
 } LogLevel;
 
-// TODO: BAD.
-extern uint8 gLogLevel;
-
 // Citation: LOG and logMsg are inspired by
 //      - https://stackoverflow.com/questions/8884335/print-the-file-name-line-number-and-function-name-of-a-calling-function-c-pro
 //      - https://stackoverflow.com/questions/2849832/c-c-line-number
@@ -51,7 +48,7 @@ extern uint8 gLogLevel;
 #define SYS_WARN(format, ...) \
     char err[DEFAULT_STRING_LEN]; \
     snprintf(err, DEFAULT_STRING_LEN, "%s (errno = %d)", __func__, errno); \
-    if (gLogLevel >= LOG_LEVEL_WARN) \
+    if (getLogLevel() >= LOG_LEVEL_WARN) \
         perror(err); \
     LOG(LOG_LEVEL_WARN, format __VA_OPT__(,) __VA_ARGS__);
 
@@ -108,5 +105,6 @@ void Gpio_initPin(GpioNum pin, char* header, GpioNum linuxPin, bool isInput);
 int Gpio_readInput(GpioNum linuxPin);
 void logMsg(LogLevel logLevel, char* file, int line, const char* function, const char* format, ...);
 int initLogLevel(void);
+LogLevel getLogLevel(void);
 
 #endif
