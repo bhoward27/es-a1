@@ -8,6 +8,7 @@
 #include "utils.h"
 
 #define URANDOM_PATH "/dev/urandom"
+#define MAX_WAIT_TIME_MS 5000
 
 int main(int argc, char* args[])
 {
@@ -103,9 +104,25 @@ int main(int argc, char* args[])
                 break;
         }
 
-        // TODO: Time how long it takes the user to press the joystick in any direction.
+        // Time how long it takes the user to press the joystick in any direction.
+        int64 startTime = getTimeInMs();
+        int64 inputTime;
+        int64 duration;
+        JoystickInputDirection joystickInput = JOYSTICK_INPUT_NONE;
+
+        // TODO: Ideally would use a blocking call version of Joystick_readInput() here to not waste CPU.
+        do {
+            joystickInput = Joystick_readInput();
+            inputTime = getTimeInMs();
+            duration = inputTime - startTime;
+        } while (joystickInput == JOYSTICK_INPUT_NONE && duration <= MAX_WAIT_TIME_MS);
+
         //      - If time > 5 seconds, exit program with a message without waiting for a joystick press:
         //      "Quitting -- no input within five seconds."
+        if (duration > MAX_WAIT_TIME_MS) {
+            printf("Quitting -- no input within %d seconds.\n", MAX_WAIT_TIME_MS / 1000);
+            return 0;
+        }
 
         // TODO: Process the user's joystick press:
         //      a) If the user pressed up or down corectly, then:
