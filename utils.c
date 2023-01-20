@@ -5,7 +5,7 @@
 
 #include "utils.h"
 
-static uint8 gLogLevel = LOG_LEVEL_ERROR;
+uint8 gLogLevel = LOG_LEVEL_ERROR;
 
 static bool isValidLogLevel(uint8 logLevel);
 

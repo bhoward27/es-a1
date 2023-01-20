@@ -20,7 +20,7 @@ void Joystick_init(void) {
     Gpio_initPin((GpioNum) JOYSTICK_BUTTON_GPIO, JOYSTICK_GPIO_HEADER, JOYSTICK_BUTTON_LINUX_GPIO, isInput);
 }
 
-JoystickInput Joystick_readInput(void)
+JoystickInputDirection Joystick_readInput(void)
 {
     // TODO: Should be a constant array somewhere.
     GpioNum gpios[JOYSTICK_NUM_PINS] = {
@@ -32,7 +32,7 @@ JoystickInput Joystick_readInput(void)
     };
     //int inputs[JOYSTICK_NUM_PINS] = {GPIO_READ_ERR};
     uint8 numPressed = 0;
-    JoystickInput joystickInput = JOYSTICK_INPUT_NONE;
+    JoystickInputDirection input = JOYSTICK_INPUT_NONE;
     for (int i = 0; i < JOYSTICK_NUM_PINS && numPressed <= 1; i++) {
         // inputs[i] = Gpio_readInput(gpios[i]);
         GpioNum gpio = gpios[i];
@@ -46,20 +46,20 @@ JoystickInput Joystick_readInput(void)
                 numPressed++;
                 switch (gpio) {
                     case JOYSTICK_UP_LINUX_GPIO:
-                        // TODO: Perhaps there shouldn't be this JoystickInput type at all? Just use the GPIO defines?
-                        joystickInput = JOYSTICK_INPUT_UP;
+                        // TODO: Perhaps there shouldn't be this JoystickInputDirection type at all? Just use the GPIO defines?
+                        input = JOYSTICK_INPUT_UP;
                         break;
                     case JOYSTICK_DOWN_LINUX_GPIO:
-                        joystickInput = JOYSTICK_INPUT_DOWN;
+                        input = JOYSTICK_INPUT_DOWN;
                         break;
                     case JOYSTICK_LEFT_LINUX_GPIO:
-                        joystickInput = JOYSTICK_INPUT_LEFT;
+                        input = JOYSTICK_INPUT_LEFT;
                         break;
                     case JOYSTICK_RIGHT_LINUX_GPIO:
-                        joystickInput = JOYSTICK_INPUT_RIGHT;
+                        input = JOYSTICK_INPUT_RIGHT;
                         break;
                     case JOYSTICK_BUTTON_LINUX_GPIO:
-                        joystickInput = JOYSTICK_INPUT_BUTTON;
+                        input = JOYSTICK_INPUT_BUTTON;
                         break;
                     default:
                         assert(false);
@@ -75,9 +75,9 @@ JoystickInput Joystick_readInput(void)
     }
 
     if (numPressed > 1) {
-        joystickInput = JOYSTICK_INPUT_NONE;
+        input = JOYSTICK_INPUT_NONE;
     }
-    LOG(LOG_LEVEL_DEBUG, "Final joystick input = %u.\n", joystickInput);
+    LOG(LOG_LEVEL_DEBUG, "Final joystick input = %u.\n", input);
 
-    return joystickInput;
+    return input;
 }

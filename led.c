@@ -37,3 +37,11 @@ void Led_init(void)
     Led_overwriteFile(LED_LOWER_MID, LED_TRIGGER_FILE, "none");
     Led_overwriteFile(LED_BOTTOM, LED_TRIGGER_FILE, "none");
 }
+
+void Led_on(LedId led) {
+    Led_overwriteFile(led, LED_BRIGHTNESS_FILE, LED_ON);
+}
+
+void Led_off(LedId led) {
+    Led_overwriteFile(led, LED_BRIGHTNESS_FILE, LED_OFF);
+}

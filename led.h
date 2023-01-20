@@ -8,6 +8,9 @@
 #define LED_TRIGGER_PATH_POSTFIX "/trigger"
 #define LED_BRIGHTNESS_PATH_POSTFIX "/brightness"
 
+#define LED_ON "1"
+#define LED_OFF "0"
+
 typedef enum {
     LED_TOP = 0,
     LED_UPPER_MID,
@@ -22,5 +25,7 @@ typedef enum {
 
 void Led_overwriteFile(LedId led, LedFileType fileType, char* data);
 void Led_init(void);
+void Led_on(LedId led);
+void Led_off(LedId led);
 
 #endif

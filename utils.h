@@ -25,6 +25,17 @@
 
 #define DEFAULT_STRING_LEN 1024
 
+typedef enum {
+    LOG_LEVEL_ERROR = 0,
+    LOG_LEVEL_WARN,
+    LOG_LEVEL_NOTICE,
+    LOG_LEVEL_INFO,
+    LOG_LEVEL_DEBUG
+} LogLevel;
+
+// TODO: BAD.
+extern uint8 gLogLevel;
+
 // Citation: LOG and logMsg are inspired by
 //      - https://stackoverflow.com/questions/8884335/print-the-file-name-line-number-and-function-name-of-a-calling-function-c-pro
 //      - https://stackoverflow.com/questions/2849832/c-c-line-number
@@ -35,14 +46,15 @@
     LOG(LOG_LEVEL_ERROR, format __VA_OPT__(,) __VA_ARGS__); \
     exit(EXIT_FAILURE);
 
-#define SYS_ERR(format, ...) \
+#define SYS_WARN(format, ...) \
     char err[DEFAULT_STRING_LEN]; \
     snprintf(err, DEFAULT_STRING_LEN, "%s (errno = %d)", __func__, errno); \
-    perror(err); \
-    LOG(LOG_LEVEL_ERROR, format __VA_OPT__(,) __VA_ARGS__);
+    if (gLogLevel >= LOG_LEVEL_WARN) \
+        perror(err); \
+    LOG(LOG_LEVEL_WARN, format __VA_OPT__(,) __VA_ARGS__);
 
 #define SYS_DIE(format, ...) \
-    SYS_ERR(format __VA_OPT__(,) __VA_ARGS__); \
+    SYS_WARN(format __VA_OPT__(,) __VA_ARGS__); \
     exit(EXIT_FAILURE);
 
 #define FILE_OPEN_ERR(fileName, die) \
@@ -51,7 +63,7 @@
         SYS_DIE("Failed to open file '%s'.\n", fileName, errno); \
     } \
     else { \
-        SYS_ERR("Failed to open file '%s'.\n", fileName, errno); \
+        SYS_WARN("Failed to open file '%s'.\n", fileName, errno); \
     }
 
 #define FILE_WRITE_ERR(fileName, die) \
@@ -60,7 +72,7 @@
         SYS_DIE("Failed to write to file '%s'.\n", fileName); \
     } \
     else { \
-        SYS_ERR("Failed to write to file '%s'.\n", fileName); \
+        SYS_WARN("Failed to write to file '%s'.\n", fileName); \
     }
 
 #define FILE_READ_ERR(fileName, die) \
@@ -69,7 +81,7 @@
         SYS_DIE("Failed to read from file '%s'.\n", fileName); \
     } \
     else { \
-        SYS_ERR("Failed to read from file '%s'.\n", fileName); \
+        SYS_WARN("Failed to read from file '%s'.\n", fileName); \
     }
 
 #define FILE_CLOSE_ERR(fileName, die) \
@@ -78,19 +90,12 @@
         SYS_DIE("Failed to close file '%s'.\n", fileName); \
     } \
     else { \
-        SYS_ERR("Failed to close file '%s'.\n", fileName); \
+        SYS_WARN("Failed to close file '%s'.\n", fileName); \
     }
 
 
 typedef uint8 GpioNum;
 
-typedef enum {
-    LOG_LEVEL_ERROR = 0,
-    LOG_LEVEL_WARN,
-    LOG_LEVEL_NOTICE,
-    LOG_LEVEL_INFO,
-    LOG_LEVEL_DEBUG
-} LogLevel;
 
 int overwriteFile(char* filePath, char* string, bool exitOnFailure);
 int readFile(char* filePath, void* outData, size_t numBytesPerItem, size_t numItems, bool exitOnFailure);

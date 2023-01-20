@@ -32,9 +32,9 @@ typedef enum {
 
     // This refers to when the joystick is pushed down towards the BeagleBone, like pressing a button.
     JOYSTICK_INPUT_BUTTON
-} JoystickInput;
+} JoystickInputDirection;
 
 void Joystick_init(void);
-JoystickInput Joystick_readInput(void);
+JoystickInputDirection Joystick_readInput(void);
 
 #endif
