@@ -77,7 +77,6 @@ JoystickInputDirection Joystick_readInput(void)
     if (numPressed > 1) {
         input = JOYSTICK_INPUT_NONE;
     }
-    LOG(LOG_LEVEL_DEBUG, "Final joystick input = %u.\n", input);
 
     return input;
 }

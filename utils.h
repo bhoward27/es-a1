@@ -25,6 +25,8 @@
 
 #define DEFAULT_STRING_LEN 1024
 
+#define NUM_MS_PER_S 1000
+
 typedef enum {
     LOG_LEVEL_ERROR = 0,
     LOG_LEVEL_WARN,
@@ -93,9 +95,7 @@ extern uint8 gLogLevel;
         SYS_WARN("Failed to close file '%s'.\n", fileName); \
     }
 
-
 typedef uint8 GpioNum;
-
 
 int overwriteFile(char* filePath, char* string, bool exitOnFailure);
 int readFile(char* filePath, void* outData, size_t numBytesPerItem, size_t numItems, bool exitOnFailure);

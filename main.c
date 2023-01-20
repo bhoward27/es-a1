@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
+#include <limits.h>
 
 #include "int_typedefs.h"
 #include "led.h"
@@ -15,9 +16,9 @@ int main(int argc, char* args[])
     printf("Hello embedded world, from Ben!\n\n");
     initLogLevel();
     Led_init();
+    Led_allOff();
     Joystick_init();
 
-    printf("\n");
     printf("When the LEDs light up, press the joystick in that direction!\n");
     printf("(Press left or right to exit.)\n\n");
 
@@ -29,9 +30,11 @@ int main(int argc, char* args[])
         FILE_OPEN_ERR(URANDOM_PATH, true);
     }
 
+    int64 fastestResponseTime = LONG_MAX;
+
     // The game loop.
-    bool keepRunning = true;
-    while (keepRunning) {
+    bool keepPlaying = true;
+    while (keepPlaying) {
         printf("Get ready...\n");
 
         // Wait random time between 0.5 s (500 ms) and 3 s (3000 ms).
@@ -44,6 +47,7 @@ int main(int argc, char* args[])
         LOG(LOG_LEVEL_DEBUG, "Sleeping %lld ms...\n", randWaitMs);
         sleepForMs(randWaitMs);
 
+        // Read player's input now to prevent cheating.
         JoystickInputDirection input = Joystick_readInput();
         switch (input) {
             case JOYSTICK_INPUT_UP:
@@ -64,39 +68,33 @@ int main(int argc, char* args[])
                 break;
         }
 
-        // Pick a random direction (up or down) and print the direction.
+        // Pick a random direction that the player will need to input.
         uint8 randDirectionNum = 0;
         size_t ret = fread(&randDirectionNum, sizeof(randDirectionNum), 1, pRngFile);
         if (ret == 0) {
             FILE_READ_ERR(URANDOM_PATH, true);
         }
         randDirectionNum %= 2; // Set to 0 or 1.
-
-        JoystickInputDirection desiredDirection = JOYSTICK_INPUT_NONE;
+        JoystickInputDirection requiredDirection = JOYSTICK_INPUT_NONE;
         switch (randDirectionNum) {
             case 0:
-                desiredDirection = JOYSTICK_INPUT_UP;
+                requiredDirection = JOYSTICK_INPUT_UP;
                 printf("Press UP now!\n");
                 break;
             case 1:
-                desiredDirection = JOYSTICK_INPUT_DOWN;
+                requiredDirection = JOYSTICK_INPUT_DOWN;
                 printf("Press DOWN now!\n");
                 break;
             default:
                 assert(false);
         }
 
-        // TODO: Display the program's chosen direction on the BBG's LEDs:
-        //      - Turn off the middle two LEDs
-        Led_off(LED_UPPER_MID);
-        Led_off(LED_LOWER_MID);
-        switch (desiredDirection) {
+        // Display the program's chosen direction on the BBG's LEDs:
+        switch (requiredDirection) {
             case JOYSTICK_INPUT_UP:
-        //      - If program chose up, then turn on the top LED (#0)
                 Led_on(LED_TOP);
                 break;
             case JOYSTICK_INPUT_DOWN:
-        //      - If program chose down, then turn on the bottom LED (#3)
                 Led_on(LED_BOTTOM);
                 break;
             default:
@@ -105,50 +103,50 @@ int main(int argc, char* args[])
         }
 
         // Time how long it takes the user to press the joystick in any direction.
+        // (Pressing the joystick down like a button doesn't count).
         int64 startTime = getTimeInMs();
         int64 inputTime;
-        int64 duration;
+        int64 responseTime;
         JoystickInputDirection joystickInput = JOYSTICK_INPUT_NONE;
-
         // TODO: Ideally would use a blocking call version of Joystick_readInput() here to not waste CPU.
         do {
             joystickInput = Joystick_readInput();
             inputTime = getTimeInMs();
-            duration = inputTime - startTime;
-        } while (joystickInput == JOYSTICK_INPUT_NONE && duration <= MAX_WAIT_TIME_MS);
+            responseTime = inputTime - startTime;
+        } while (
+            (joystickInput == JOYSTICK_INPUT_NONE || joystickInput == JOYSTICK_INPUT_BUTTON)
+            &&
+            responseTime <= MAX_WAIT_TIME_MS
+        );
 
-        //      - If time > 5 seconds, exit program with a message without waiting for a joystick press:
-        //      "Quitting -- no input within five seconds."
-        if (duration > MAX_WAIT_TIME_MS) {
+        // Respond to player's input.
+        if (responseTime > MAX_WAIT_TIME_MS) {
             printf("Quitting -- no input within %d seconds.\n", MAX_WAIT_TIME_MS / 1000);
-            return 0;
+            keepPlaying = false;
+        }
+        else if (joystickInput == requiredDirection) {
+            printf("Correct!\n");
+            if (responseTime < fastestResponseTime) {
+                fastestResponseTime = responseTime;
+                printf("NEW BEST TIME!\n");
+            }
+            printf("Your reaction time was %lld ms; best time so far is %lld ms.\n", responseTime, fastestResponseTime);
+            uint64 numCycles = Led_flashAllLeds(4, NUM_MS_PER_S/2);
+            LOG(LOG_LEVEL_DEBUG, "Flashed on and off %llu times.\n", numCycles);
+        }
+        // If player's input was incorrect and up or down.
+        else if (joystickInput == JOYSTICK_INPUT_UP || joystickInput == JOYSTICK_INPUT_DOWN) {
+            printf("Incorrect.\n");
+            uint64 numCycles = Led_flashAllLeds(10, NUM_MS_PER_S);
+            LOG(LOG_LEVEL_DEBUG, "Flashed on and off %llu times.\n", numCycles);
+        }
+        else if (joystickInput == JOYSTICK_INPUT_LEFT || joystickInput == JOYSTICK_INPUT_RIGHT) {
+            printf("Quitting now, on the player's request.\n");
+            keepPlaying = false;
         }
 
-        // TODO: Process the user's joystick press:
-        //      a) If the user pressed up or down corectly, then:
-        //          - Print a message
-        //          - If this was the fastest correct response time yet, display that in a message
-        //          - Display this attempt's response time, and the high score, in milliseconds
-        //          - Flash all four LEDs on and off at 4 Hz for 0.5 seconds (two flashes)
-        //      b) If the user pressed up or down incorrectly, print a message and flash all four LEDs on and off
-        //          at 10 Hz for 1 second.
-        //      c) If the user pressed left or right, print a message and quit.
-
-        // TODO: Remove this later.
-        sleepForMs(1000);
-
-        // Turn off whichever LED was on.
-        switch (desiredDirection) {
-            case JOYSTICK_INPUT_UP:
-                Led_off(LED_TOP);
-                break;
-            case JOYSTICK_INPUT_DOWN:
-                Led_off(LED_BOTTOM);
-                break;
-            default:
-                assert(false);
-                break;
-        }
+        // Just in case any were on.
+        Led_allOff();
 
         printf("\n");
     }
@@ -157,5 +155,6 @@ int main(int argc, char* args[])
         FILE_CLOSE_ERR(URANDOM_PATH, true);
     }
 
+    LOG(LOG_LEVEL_INFO, "Reached end of program successfully.\n");
     return 0;
 }

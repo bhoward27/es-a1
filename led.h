@@ -27,5 +27,8 @@ void Led_overwriteFile(LedId led, LedFileType fileType, char* data);
 void Led_init(void);
 void Led_on(LedId led);
 void Led_off(LedId led);
+uint64 Led_flashAllLeds(uint32 frequencyHz, int64 duration);
+void Led_allOn(void);
+void Led_allOff(void);
 
 #endif

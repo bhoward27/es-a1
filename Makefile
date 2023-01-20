@@ -3,7 +3,7 @@ LOG_LEVEL_FILE=$(OUT_DIR)/logLevel.txt
 
 CROSS_COMPILE = arm-linux-gnueabihf-
 CC_C = $(CROSS_COMPILE)gcc
-CFLAGS = -std=gnu11 -D _POSIX_C_SOURCE=200809L -g -Wall -Werror -Wshadow -Wno-error=unused-variable -Wno-error=unused-function
+CFLAGS = -std=gnu11 -D _POSIX_C_SOURCE=200809L -O3 -Wall -Werror -Wshadow -Wno-error=unused-variable -Wno-error=unused-function
 OFLAGS = $(CFLAGS) -c
 
 OBJS = main.o utils.o led.o joystick.o

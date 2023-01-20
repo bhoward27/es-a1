@@ -38,10 +38,49 @@ void Led_init(void)
     Led_overwriteFile(LED_BOTTOM, LED_TRIGGER_FILE, "none");
 }
 
-void Led_on(LedId led) {
+void Led_on(LedId led)
+{
     Led_overwriteFile(led, LED_BRIGHTNESS_FILE, LED_ON);
 }
 
-void Led_off(LedId led) {
+void Led_off(LedId led)
+{
     Led_overwriteFile(led, LED_BRIGHTNESS_FILE, LED_OFF);
+}
+
+uint64 Led_flashAllLeds(uint32 frequencyHz, int64 durationMs)
+{
+    int64 period = NUM_MS_PER_S / frequencyHz;
+    int64 timeGap = period / 2;
+    int64 startTime = getTimeInMs();
+    int64 maxEndTime = startTime + durationMs;
+    int64 nextIterationTime = startTime + period;
+    uint64 numCycles = 0;
+    while (nextIterationTime <= maxEndTime) {
+        Led_allOn();
+        sleepForMs(timeGap);
+
+        Led_allOff();
+        sleepForMs(timeGap);
+
+        nextIterationTime += period;
+        numCycles++;
+    }
+    return numCycles;
+}
+
+void Led_allOn(void)
+{
+    Led_on(LED_TOP);
+    Led_on(LED_UPPER_MID);
+    Led_on(LED_LOWER_MID);
+    Led_on(LED_BOTTOM);
+}
+
+void Led_allOff(void)
+{
+    Led_off(LED_TOP);
+    Led_off(LED_UPPER_MID);
+    Led_off(LED_LOWER_MID);
+    Led_off(LED_BOTTOM);
 }
