@@ -34,6 +34,8 @@ typedef enum {
     JOYSTICK_INPUT_BUTTON
 } JoystickInputDirection;
 
+// TODO: A struct might be nice. Could store header, gpio, linux GPIO, and JoystickInputDirection.
+
 void Joystick_init(void);
 JoystickInputDirection Joystick_readInput(void);
 

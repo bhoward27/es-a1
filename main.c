@@ -155,6 +155,8 @@ int main(int argc, char* args[])
         FILE_CLOSE_ERR(URANDOM_PATH, true);
     }
 
+    // TODO: Program should restore LED and joystick GPIO defaults (or the user's initial settings) here.
+
     LOG(LOG_LEVEL_INFO, "Reached end of program successfully.\n");
     return 0;
 }

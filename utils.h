@@ -16,6 +16,7 @@
 #define ERR_READ 3
 #define ERR_CLOSE 4
 
+// TODO: Move all GPIO stuff to its own module.
 #define GPIO_EXPORT_PATH "/sys/class/gpio/export"
 #define GPIO_PIN_PATH_PREFIX "/sys/class/gpio/gpio"
 #define GPIO_CONFIG_PIN_PATH "/usr/bin/config-pin"
